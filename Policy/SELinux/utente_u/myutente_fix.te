@@ -1,0 +1,110 @@
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+module myutente_fix 1.0;
+
+require {
+	type udev_t;
+	type user_runtime_t;
+	type utente_t;
+	type user_home_t;
+	type NetworkManager_var_run_t;
+	type unlabeled_t;
+	type http_port_t;
+	type utente_dbusd_t;
+	type sysfs_t;
+	type utente_rw_t;
+	type exim_initrc_exec_t;
+	type xdm_t;
+	type systemd_logind_t;
+	type avahi_initrc_exec_t;
+	type auditd_initrc_exec_t;
+	type syslogd_initrc_exec_t;
+
+	type fixed_disk_device_t;
+	type init_t;
+	type mount_var_run_t;
+	type removable_device_t;
+	type udev_var_run_t;
+	type var_lock_t;
+	type bin_t;
+	class tcp_socket { connect create getattr getopt name_connect read setopt write };
+	class process {execmem getcap getattr signal setrlimit noatsecure rlimitinh siginh};
+	class file { execute execute_no_trans open read write getattr append create   lock   rename unlink relabelfrom relabelto};
+	class udp_socket { getattr read write connect create ioctl };
+	class rawip_socket create;
+
+	class blk_file getattr;
+
+	type gpg_secret_t;
+	type proc_net_t;
+	type crond_initrc_exec_t;
+	type initrc_exec_t;
+	type xdm_exec_t;
+	type proc_t;
+	type lib_t;
+	class dir { search setattr write getattr read  };
+	class sock_file { unlink write };
+	class netlink_route_socket {create bind getattr nlmsg_read read write};
+
+
+}
+
+#============= network ==============
+allow utente_t NetworkManager_var_run_t:file { open read };
+allow utente_t http_port_t:tcp_socket name_connect;
+allow utente_t self:tcp_socket { connect create getattr getopt read setopt write };
+allow utente_t self:udp_socket { getattr read write connect create ioctl};
+allow utente_t self:rawip_socket create;
+#===avahi is dns===
+allow utente_t avahi_initrc_exec_t:file execute;
+allow utente_t self:netlink_route_socket create;
+#===========================================
+
+#==========common=============
+allow utente_t self:process execmem;
+allow utente_t user_runtime_t:file { open read write };
+allow utente_t gpg_secret_t:dir { getattr search };
+allow utente_t proc_net_t:file { getattr open read };
+allow utente_t auditd_initrc_exec_t:file execute;
+allow utente_t exim_initrc_exec_t:file execute;
+allow utente_t syslogd_initrc_exec_t:file execute;
+allow utente_t udev_t:process getattr;
+allow utente_t user_runtime_t:sock_file write;
+allow systemd_logind_t user_runtime_t:sock_file unlink;
+allow utente_t proc_t:file read;
+allow utente_t crond_initrc_exec_t:file execute;
+allow utente_t initrc_exec_t:file execute;
+allow utente_t self:process setrlimit;
+allow utente_t utente_rw_t:file {relabelfrom };
+allow utente_t bin_t:file relabelto;
+
+
+#============= utente_dbusd_t ==============
+allow utente_dbusd_t self:process getcap;
+allow utente_dbusd_t sysfs_t:file {read open};
+allow utente_dbusd_t utente_rw_t:dir search;
+allow utente_dbusd_t utente_rw_t:file {append};
+allow utente_dbusd_t user_home_t:dir search;
+allow utente_dbusd_t utente_t:process { noatsecure rlimitinh siginh };
+allow utente_t utente_dbusd_t:process { noatsecure rlimitinh siginh };
+allow utente_dbusd_t lib_t:file { execute execute_no_trans open read write getattr append create   lock   rename unlink };;
+
+#============== xserver ==============
+allow xdm_t utente_rw_t:dir search;
+allow utente_t xdm_exec_t:file execute;
+
+
+
+
+
+allow utente_t fixed_disk_device_t:blk_file getattr;
+allow utente_t init_t:dir search;
+allow utente_t mount_var_run_t:dir search;
+allow utente_t proc_t:file open;
+allow utente_t removable_device_t:blk_file getattr;
+allow utente_t self:netlink_route_socket bind;
+allow utente_t udev_var_run_t:dir search;
+allow utente_t var_lock_t:dir getattr;
+
+allow utente_t gpg_secret_t:dir setattr;
+allow utente_t self:netlink_route_socket { getattr nlmsg_read read write };

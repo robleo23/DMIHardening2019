@@ -1,0 +1,29 @@
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+policy_module(utente, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+myuserdom_restricted_xwindows_user_template(utente)
+
+type utente_rw_t;
+files_type(utente_rw_t)
+role utente_r;
+
+########################################
+#
+# utente local policy
+#
+
+manage_dirs_pattern(utente_t, utente_rw_t, utente_rw_t)
+manage_files_pattern(utente_t, utente_rw_t, utente_rw_t)
+manage_lnk_files_pattern(utente_t, utente_rw_t, utente_rw_t)
+
+domain_use_interactive_fds(utente_t)
+
+files_read_etc_files(utente_t)
+
+miscfiles_read_localization(utente_t)

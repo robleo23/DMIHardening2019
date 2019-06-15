@@ -1,0 +1,270 @@
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+
+## <summary>policy for libreoffice</summary>
+
+########################################
+## <summary>
+##	Execute TEMPLATE in the libreoffice domin.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`libreoffice_domtrans',`
+	gen_require(`
+		type libreoffice_t, libreoffice_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, libreoffice_exec_t, libreoffice_t)
+')
+
+########################################
+## <summary>
+##	Search libreoffice rw directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_search_rw_dir',`
+	gen_require(`
+		type libreoffice_rw_t;
+	')
+
+	allow $1 libreoffice_rw_t:dir search_dir_perms;
+	files_search_rw($1)
+')
+
+########################################
+## <summary>
+##	Read libreoffice rw files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_read_rw_files',`
+	gen_require(`
+		type libreoffice_rw_t;
+	')
+
+	read_files_pattern($1, libreoffice_rw_t, libreoffice_rw_t)
+	allow $1 libreoffice_rw_t:dir list_dir_perms;
+	files_search_rw($1)
+')
+
+########################################
+## <summary>
+##	Manage libreoffice rw files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_manage_rw_files',`
+	gen_require(`
+		type libreoffice_rw_t;
+	')
+
+	manage_files_pattern($1, libreoffice_rw_t, libreoffice_rw_t)
+')
+
+########################################
+## <summary>
+##	Create, read, write, and delete
+##	libreoffice rw dirs.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_manage_rw_dirs',`
+	gen_require(`
+		type libreoffice_rw_t;
+	')
+
+	manage_dirs_pattern($1, libreoffice_rw_t, libreoffice_rw_t)
+')
+
+
+########################################
+## <summary>
+##	Search libreoffice lib directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_search_lib',`
+	gen_require(`
+		type libreoffice_var_lib_t;
+	')
+
+	allow $1 libreoffice_var_lib_t:dir search_dir_perms;
+	files_search_var_lib($1)
+')
+
+########################################
+## <summary>
+##	Read libreoffice lib files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_read_lib_files',`
+	gen_require(`
+		type libreoffice_var_lib_t;
+	')
+
+	files_search_var_lib($1)
+	read_files_pattern($1, libreoffice_var_lib_t, libreoffice_var_lib_t)
+')
+
+########################################
+## <summary>
+##	Manage libreoffice lib files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_manage_lib_files',`
+	gen_require(`
+		type libreoffice_var_lib_t;
+	')
+
+	files_search_var_lib($1)
+	manage_files_pattern($1, libreoffice_var_lib_t, libreoffice_var_lib_t)
+')
+
+########################################
+## <summary>
+##	Manage libreoffice lib directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_manage_lib_dirs',`
+	gen_require(`
+		type libreoffice_var_lib_t;
+	')
+
+	files_search_var_lib($1)
+	manage_dirs_pattern($1, libreoffice_var_lib_t, libreoffice_var_lib_t)
+')
+
+
+########################################
+## <summary>
+##	Execute libreoffice in the libreoffice domain, and
+##	allow the specified role the libreoffice domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed to transition
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	The role to be allowed the libreoffice domain.
+##	</summary>
+## </param>
+#
+interface(`libreoffice_run',`
+	gen_require(`
+		type libreoffice_t;
+		attribute_role libreoffice_roles;
+	')
+
+	libreoffice_domtrans($1)
+	roleattribute $2 libreoffice_roles;
+')
+
+########################################
+## <summary>
+##	Role access for libreoffice
+## </summary>
+## <param name="role">
+##	<summary>
+##	Role allowed access
+##	</summary>
+## </param>
+## <param name="domain">
+##	<summary>
+##	User domain for the role
+##	</summary>
+## </param>
+#
+interface(`libreoffice_role',`
+	gen_require(`
+		type libreoffice_t;
+		attribute_role libreoffice_roles;
+	')
+
+	roleattribute $1 libreoffice_roles;
+
+	libreoffice_domtrans($2)
+
+	ps_process_pattern($2, libreoffice_t)
+	allow $2 libreoffice_t:process { signull signal sigkill };
+')
+
+########################################
+## <summary>
+##	All of the rules required to administrate
+##	an libreoffice environment
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	Role allowed access.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`libreoffice_admin',`
+	gen_require(`
+		type libreoffice_t;
+		type libreoffice_rw_t;
+		type libreoffice_var_lib_t;
+	')
+
+	allow $1 libreoffice_t:process { ptrace signal_perms };
+	ps_process_pattern($1, libreoffice_t)
+
+	files_search_etc($1)
+	admin_pattern($1, libreoffice_rw_t)
+
+	files_search_var_lib($1)
+	admin_pattern($1, libreoffice_var_lib_t)
+	optional_policy(`
+		systemd_passwd_agent_exec($1)
+		systemd_read_fifo_file_passwd_run($1)
+	')
+')

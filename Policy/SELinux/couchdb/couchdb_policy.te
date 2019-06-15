@@ -1,0 +1,149 @@
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+#linea 120 commentata per evitare che apre shell
+
+module couchdb_policy 1.0;
+
+require{
+
+	type couchdb_t;
+	type utente_t;
+	type couchdb_exec_t;
+	type couchdb_conf_t;
+	type couchdb_js_exec_t;
+	type user_devpts_t;
+	type user_tty_device_t;
+	type utente_rw_t;
+	type user_home_t;
+	type getty_t;
+	type epmd_port_t;
+	type NetworkManager_var_run_t;
+	type cgroup_t;
+	type device_t;
+	type hugetlbfs_t;
+	type pstore_t;
+	type sysctl_t;
+	type tmpfs_t;
+	type debugfs_t;
+	type unreserved_port_t;
+	type user_runtime_root_t;
+	type var_lock_t;
+	type sysctl_fs_t;
+	type user_runtime_t;
+	type autofs_t;
+	type security_t;
+	type selinux_config_t;
+	type couchdb_js_t;
+	type shell_exec_t;
+	type home_root_t;
+	type couchdb_tmp_t;
+	type bin_t;
+	type http_cache_port_t;
+	type tmp_t;
+	type etc_t;
+	type kerberos_master_port_t;
+	class process {transition};
+	class file { execute execute_no_trans open read write getattr append create   lock   rename unlink setattr setattr};
+	class process {execmem getcap getattr signal setrlimit noatsecure rlimitinh siginh sigchld};
+	class dir { search setattr write getattr read   add_name open remove_name};
+	role utente_r;
+	class chr_file { read write };
+	class fd {use};
+	class tcp_socket {name_bind name_connect connect create getattr getopt ioctl read setopt write};
+	class unix_dgram_socket create;
+	class filesystem getattr;
+	class lnk_file {read create unlink};
+	class udp_socket create;
+}
+
+
+
+
+#permette all'utente con ruolo utente_r il dominio couchdb_t
+role utente_r types couchdb_t;
+#################################
+role utente_r types couchdb_js_t;
+#obbliga ad eseguire la domain transition dal momento che vogliamo che il processo di couchdb giri con il tipo couchdb_t che è molto restrittivo.Inoltre deve essere anche consentito.
+allow utente_t couchdb_t : process transition;
+allow utente_t  couchdb_js_t: process transition;
+type_transition utente_t couchdb_exec_t: process couchdb_t;
+
+allow utente_t couchdb_conf_t:dir { search setattr write getattr read  };
+allow utente_t couchdb_exec_t:file { execute execute_no_trans open read write getattr append create lock rename unlink };
+allow utente_t couchdb_js_exec_t:file { execute execute_no_trans open read write getattr append create lock rename unlink };
+allow couchdb_t utente_t:process {execmem getcap getattr signal setrlimit noatsecure rlimitinh siginh};
+
+#============= utente_t ==============
+allow utente_t couchdb_t: process {execmem getcap getattr signal setrlimit noatsecure rlimitinh siginh sigchld};
+allow couchdb_t utente_t:process {execmem getcap getattr signal setrlimit noatsecure rlimitinh siginh sigchld};
+allow couchdb_t user_devpts_t:chr_file { read write };
+allow couchdb_t utente_t:fd use;
+
+allow couchdb_t user_tty_device_t:chr_file { read write };
+allow couchdb_t utente_rw_t:dir { search setattr write getattr read  };
+allow couchdb_t getty_t:fd use;
+allow couchdb_t user_home_t:dir { search setattr write getattr read  add_name open };
+allow couchdb_t utente_rw_t:file { execute execute_no_trans open read write getattr append create lock rename unlink };
+#allow couchdb_t security_t:filesystem getattr;
+#allow couchdb_t selinux_config_t:dir search;
+allow couchdb_t user_home_t:file { execute execute_no_trans open read write getattr append create lock rename unlink };
+
+allow couchdb_t couchdb_js_exec_t:dir { search setattr write getattr read  open};
+allow couchdb_t epmd_port_t:tcp_socket {name_bind name_connect};
+allow couchdb_t self:unix_dgram_socket create;
+allow couchdb_t NetworkManager_var_run_t:dir { search setattr write getattr read  open};
+allow couchdb_t NetworkManager_var_run_t:file { execute execute_no_trans open read write getattr append create lock rename unlink };
+allow couchdb_t cgroup_t:filesystem getattr;
+allow couchdb_t couchdb_conf_t:dir { search setattr write getattr read  open};
+allow couchdb_t couchdb_conf_t:file { execute execute_no_trans open read write getattr append create lock rename unlink };
+allow couchdb_t debugfs_t:dir { search setattr write getattr read  open};
+allow couchdb_t device_t:filesystem getattr;
+
+allow couchdb_t hugetlbfs_t:dir { search setattr write getattr read open };
+allow couchdb_t hugetlbfs_t:filesystem getattr;
+allow couchdb_t pstore_t:dir { search setattr write getattr read open };
+allow couchdb_t pstore_t:filesystem getattr;
+allow couchdb_t sysctl_t:dir { search setattr write getattr read open };
+allow couchdb_t tmpfs_t:dir { search setattr write getattr read  open};
+allow couchdb_t tmpfs_t:filesystem getattr;
+allow couchdb_t unreserved_port_t:tcp_socket {name_bind name_connect};
+allow couchdb_t user_runtime_root_t:dir { search setattr write getattr read  open};
+allow couchdb_t var_lock_t:dir { search setattr write getattr read  open};
+allow couchdb_t sysctl_fs_t:dir { search setattr write getattr read  open};
+allow couchdb_t user_runtime_t:dir { search setattr write getattr read  open};
+allow couchdb_t autofs_t:dir { search setattr write getattr read  open};
+allow couchdb_t security_t:dir { search setattr write getattr read  open};
+allow couchdb_t security_t:filesystem getattr;
+allow couchdb_t selinux_config_t:dir { search setattr write getattr read  open};
+
+#=====================Da qui inizia l'exploit per lanciare una shell remota===========================
+#allow couchdb_js_t shell_exec_t:file { execute execute_no_trans open read write getattr append create   lock rename unlink };
+allow couchdb_js_t utente_t:fd use;
+allow couchdb_t couchdb_js_t:process { rlimitinh siginh };
+allow couchdb_js_t home_root_t:dir { search setattr write getattr read  open};
+allow couchdb_js_t utente_t:fd use;
+allow couchdb_t couchdb_js_t:process noatsecure;
+allow couchdb_js_t utente_rw_t:dir { search setattr write getattr read  open};
+allow couchdb_js_t user_home_t:dir { search setattr write getattr read  open};
+allow couchdb_js_t couchdb_js_exec_t:dir { search setattr write getattr read  open};
+allow couchdb_js_t couchdb_js_exec_t:file{ execute execute_no_trans open read write getattr append create   lock rename unlink };
+allow couchdb_js_t user_home_t:file{ execute execute_no_trans open read write getattr append create   lock rename unlink };
+allow couchdb_js_t couchdb_tmp_t:file { execute execute_no_trans open read write getattr append create   lock rename unlink };
+allow couchdb_js_t bin_t:dir { search setattr write getattr read  open};
+allow couchdb_js_t bin_t:file { execute execute_no_trans open read write getattr append create   lock rename unlink };
+allow couchdb_js_t bin_t:lnk_file {read create unlink};
+
+
+
+allow couchdb_js_t http_cache_port_t:tcp_socket name_connect;
+allow couchdb_js_t kerberos_master_port_t:tcp_socket name_connect;
+allow couchdb_js_t security_t:filesystem getattr;
+allow couchdb_js_t self:tcp_socket { connect create getattr getopt ioctl read setopt write };
+allow couchdb_js_t self:udp_socket create;
+allow couchdb_js_t sysctl_t:dir search;
+allow couchdb_js_t tmp_t:dir { add_name remove_name write };
+allow couchdb_js_t tmp_t:file { create execute execute_no_trans getattr open read setattr unlink write };
+allow couchdb_js_t etc_t:file { getattr open read };
+allow couchdb_js_t selinux_config_t:dir search;
+allow couchdb_js_t user_home_t:dir add_name;
+

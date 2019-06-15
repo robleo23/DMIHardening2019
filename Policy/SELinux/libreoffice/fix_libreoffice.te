@@ -1,0 +1,182 @@
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+#linee 170-173 commentate per evitare connessioni
+
+module fix_libreoffice 1.0;
+
+require {
+	role utente_r;
+	type libreoffice_exec_t;
+	type NetworkManager_var_run_t;
+	type shell_exec_t;
+	type utente_dbusd_t;
+	type home_root_t;
+	type sysctl_fs_t;
+	type removable_device_t;
+	type user_home_dir_t;
+	type usr_t;
+	type semanage_tmp_t;
+	type urandom_device_t;
+	type tmpfs_t;
+	type hugetlbfs_t;
+	type init_t;
+	type xserver_t;
+	type proc_t;
+	type device_t;
+	type java_exec_t;
+	type fixed_disk_device_t;
+	type semanage_t;
+	type security_t;
+	type utente_rw_t;
+	type xauth_home_t;
+	type utente_t;
+	type sysfs_t;
+	type crond_t;
+	type bin_t;
+	type tmp_t;
+	type load_policy_t;
+	type system_cronjob_t;
+	type gpg_secret_t;
+	type setfiles_t;
+	type fs_t;
+	type net_conf_t;
+	type user_runtime_t;
+	type var_lock_t;
+	type fonts_cache_t;
+	type session_dbusd_home_t;
+	type user_devpts_t;
+	type systemd_sessions_var_run_t;
+	type debugfs_t;
+	type http_port_t;
+	type libreoffice_rw_t;
+	type user_home_t;
+	type root_t;
+	type cgroup_t;
+	type ipp_port_t;
+	type fonts_t;
+	type mount_var_run_t;
+	type libreoffice_t;
+	type shadow_t;
+	type sysctl_vm_overcommit_t;
+	type sysctl_vm_t;
+	type system_dbusd_t;
+	type gpg_exec_t;
+	type user_tmp_t;
+	type kerberos_master_port_t;
+	type proc_net_t;
+	class dir { add_name create getattr open read remove_name rmdir search setattr write link unlink};
+	class tcp_socket { connect create getopt name_connect read setopt write getattr};
+	class lnk_file { getattr read };
+	class process { execmem getsched noatsecure rlimitinh sigchld siginh transition signal};
+	class unix_stream_socket connectto;
+	class blk_file getattr;
+	class chr_file { getattr ioctl open read write };
+	class udp_socket { connect create getattr read write ioctl setopt};
+	class netlink_route_socket { bind create getattr nlmsg_read read write };
+	class shm { create destroy read unix_read unix_write write };
+	class sock_file { create getattr unlink write };
+	class filesystem getattr;
+	class file { append create execute execute_no_trans getattr ioctl link lock open read rename setattr unlink write };
+	class dbus send_msg;
+	class unix_dgram_socket { create ioctl };
+}
+
+#permette all'utente con ruolo utente_r il dominio libreoffice_t
+role utente_r types libreoffice_t;
+#################################
+#obbliga ad eseguire la domain transition dal momento che vogliamo che il processo di libreoffice giri con il tipo libreoffice_t che è molto restrittivo.Inoltre deve essere anche consentito.
+allow utente_t libreoffice_t : process transition;
+type_transition utente_t libreoffice_exec_t: process libreoffice_t;
+allow utente_t libreoffice_rw_t: dir {open read search getattr setattr write create link unlink};
+
+
+
+#============= libreoffice_t ==============
+allow libreoffice_t bin_t:dir getattr;
+allow libreoffice_t bin_t:file { execute execute_no_trans getattr open read };
+allow libreoffice_t bin_t:lnk_file { getattr read };
+allow libreoffice_t cgroup_t:dir search;
+allow libreoffice_t cgroup_t:file { getattr open read };
+allow libreoffice_t fonts_cache_t:dir setattr;
+allow libreoffice_t fonts_cache_t:file { getattr open read };
+allow libreoffice_t fonts_t:dir { getattr open read };
+allow libreoffice_t fonts_t:file { getattr open read };
+allow libreoffice_t fonts_t:lnk_file read;
+allow libreoffice_t fs_t:filesystem getattr;
+allow libreoffice_t gpg_secret_t:dir getattr;
+
+allow libreoffice_t java_exec_t:file { execute execute_no_trans getattr open read };
+allow libreoffice_t libreoffice_rw_t:file { execute execute_no_trans };
+
+allow libreoffice_t proc_t:file getattr;
+allow libreoffice_t security_t:filesystem getattr;
+
+allow libreoffice_t self:process { execmem getsched };
+allow libreoffice_t self:shm { create destroy read unix_read unix_write write };
+
+allow libreoffice_t self:unix_stream_socket connectto;
+allow libreoffice_t session_dbusd_home_t:dir getattr;
+#============ non permettere di eseguire una shell impedisce l'avvio del trojan
+allow libreoffice_t shell_exec_t:file { execute execute_no_trans open read};
+allow libreoffice_t sysfs_t:dir read;
+allow libreoffice_t sysfs_t:file { open read };
+allow libreoffice_t sysfs_t:lnk_file read;
+allow libreoffice_t tmp_t:dir { add_name create getattr open read remove_name rmdir search write };
+allow libreoffice_t tmp_t:file { create getattr lock open read rename setattr unlink write };
+allow libreoffice_t tmp_t:sock_file { create getattr unlink write };
+allow libreoffice_t sysctl_vm_overcommit_t:file { open read };
+allow libreoffice_t sysctl_vm_t:dir search;
+
+allow libreoffice_t system_dbusd_t:unix_stream_socket connectto;
+allow libreoffice_t user_home_t:dir search;
+allow libreoffice_t user_runtime_t:dir search;
+allow libreoffice_t user_runtime_t:sock_file write;
+allow libreoffice_t utente_rw_t:dir search;
+
+
+#!!!! This avc can be allowed using the boolean 'global_ssp'
+allow libreoffice_t urandom_device_t:chr_file { getattr open read };
+allow libreoffice_t user_devpts_t:chr_file { getattr ioctl read write };
+allow libreoffice_t user_home_t:dir { add_name create getattr open read remove_name rmdir setattr write };
+allow libreoffice_t user_home_t:file { append create getattr link lock open read rename setattr unlink write };
+allow libreoffice_t usr_t:dir read;
+allow libreoffice_t usr_t:file { getattr ioctl open read };
+allow libreoffice_t usr_t:lnk_file read;
+allow libreoffice_t utente_dbusd_t:unix_stream_socket connectto;
+allow libreoffice_t utente_rw_t:dir { getattr open read };
+allow libreoffice_t utente_rw_t:file { getattr open read write };
+allow libreoffice_t utente_t:process sigchld;
+allow libreoffice_t xauth_home_t:file { getattr open read };
+allow libreoffice_t xserver_t:unix_stream_socket connectto;
+allow utente_t libreoffice_rw_t:file getattr;
+allow utente_t libreoffice_t:process { noatsecure rlimitinh siginh };
+allow utente_t libreoffice_rw_t:file { execute read };
+allow utente_t libreoffice_t:process signal;
+
+allow libreoffice_t gpg_exec_t:file { execute execute_no_trans open read };
+allow libreoffice_t gpg_secret_t:dir { add_name remove_name write };
+allow libreoffice_t gpg_secret_t:file { create getattr link open read unlink write };
+allow libreoffice_t self:process signal;
+allow libreoffice_t user_runtime_t:dir getattr;
+allow libreoffice_t user_tmp_t:dir getattr;
+allow utente_t libreoffice_t : dbus send_msg;
+allow libreoffice_t utente_t : dbus send_msg;
+allow libreoffice_t home_root_t:dir { add_name create getattr open read remove_name rmdir search setattr write link unlink};
+
+#================== permessi utili al trojan==================
+allow libreoffice_t NetworkManager_var_run_t:file { getattr open read };
+allow libreoffice_t net_conf_t:file { getattr open read };
+allow libreoffice_t self:netlink_route_socket { bind create getattr nlmsg_read read write };
+allow libreoffice_t net_conf_t:file { getattr open read };
+#allow libreoffice_t self:tcp_socket { connect create getopt read setopt write getattr};
+#allow libreoffice_t self:udp_socket { connect create getattr read write ioctl setopt};
+#allow libreoffice_t kerberos_master_port_t:tcp_socket name_connect;
+#allow libreoffice_t http_port_t:tcp_socket name_connect;
+allow libreoffice_t ipp_port_t:tcp_socket name_connect;
+allow libreoffice_t proc_net_t:file { open read };
+allow libreoffice_t proc_t:file { open read };
+allow libreoffice_t tmp_t:file { append execute execute_no_trans ioctl };
+allow libreoffice_t utente_rw_t:file lock;
+allow libreoffice_t self:unix_dgram_socket { create ioctl };
+allow libreoffice_t bin_t:dir { add_name create getattr open read remove_name rmdir search setattr write link unlink};
+allow libreoffice_t usr_t:lnk_file getattr;

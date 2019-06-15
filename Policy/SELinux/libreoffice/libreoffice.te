@@ -1,0 +1,47 @@
+
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+policy_module(libreoffice, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+attribute_role libreoffice_roles;
+roleattribute system_r libreoffice_roles;
+
+type libreoffice_t;
+type libreoffice_exec_t;
+application_domain(libreoffice_t, libreoffice_exec_t)
+
+
+
+type libreoffice_rw_t;
+files_type(libreoffice_rw_t)
+
+type libreoffice_var_lib_t;
+files_type(libreoffice_var_lib_t)
+
+########################################
+#
+# libreoffice local policy
+#
+
+allow libreoffice_t self:fifo_file manage_fifo_file_perms;
+allow libreoffice_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(libreoffice_t, libreoffice_rw_t, libreoffice_rw_t)
+manage_files_pattern(libreoffice_t, libreoffice_rw_t, libreoffice_rw_t)
+manage_lnk_files_pattern(libreoffice_t, libreoffice_rw_t, libreoffice_rw_t)
+
+manage_dirs_pattern(libreoffice_t, libreoffice_var_lib_t, libreoffice_var_lib_t)
+manage_files_pattern(libreoffice_t, libreoffice_var_lib_t, libreoffice_var_lib_t)
+manage_lnk_files_pattern(libreoffice_t, libreoffice_var_lib_t, libreoffice_var_lib_t)
+files_var_lib_filetrans(libreoffice_t, libreoffice_var_lib_t, { dir file lnk_file })
+
+domain_use_interactive_fds(libreoffice_t)
+
+files_read_etc_files(libreoffice_t)
+
+miscfiles_read_localization(libreoffice_t)

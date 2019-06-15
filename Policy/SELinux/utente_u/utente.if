@@ -1,0 +1,262 @@
+#THIS POLICY MODULE HAS BEEN DEVELOPED BY VALENTINO GANDOLFO
+#https://github.com/ValentinoG
+template(`myuserdom_restricted_xwindows_user_template',`
+
+	myuserdom_restricted_user_template($1)
+
+	##############################
+	#
+	# Local policy
+	#
+
+	auth_role($1_r, $1_t)
+	auth_search_pam_console_data($1_t)
+
+	dev_read_sound($1_t)
+	dev_write_sound($1_t)
+	# gnome keyring wants to read this.
+	dev_dontaudit_read_rand($1_t)
+
+	logging_send_syslog_msg($1_t)
+	logging_dontaudit_send_audit_msgs($1_t)
+
+	# Need to to this just so screensaver will work. Should be moved to screensaver domain
+	logging_send_audit_msgs($1_t)
+	selinux_get_enforce_mode($1_t)
+
+	xserver_restricted_role($1_r, $1_t)
+
+	optional_policy(`
+		alsa_read_config($1_t)
+	')
+
+	optional_policy(`
+		dbus_role_template($1, $1_r, $1_t)
+		dbus_system_bus_client($1_t)
+
+		optional_policy(`
+			consolekit_dbus_chat($1_t)
+		')
+
+		optional_policy(`
+			cups_dbus_chat($1_t)
+		')
+
+		optional_policy(`
+			gnome_role_template($1, $1_r, $1_t)
+			wm_role_template($1, $1_r, $1_t)
+		')
+
+		optional_policy(`
+			pulseaudio_role($1_r, $1_t)
+		')
+	')
+
+	optional_policy(`
+		java_role($1_r, $1_t)
+	')
+
+	optional_policy(`
+		setroubleshoot_dontaudit_stream_connect($1_t)
+	')
+')
+
+
+template(`myuserdom_restricted_user_template',`
+	gen_require(`
+		attribute unpriv_userdomain;
+	')
+
+	myuserdom_login_user_template($1)
+
+	typeattribute $1_t unpriv_userdomain;
+	domain_interactive_fd($1_t)
+
+	##############################
+	#
+	# Local policy
+	#
+
+	optional_policy(`
+		loadkeys_run($1_t, $1_r)
+	')
+')
+
+template(`myuserdom_login_user_template', `
+	gen_require(`
+		class context contains;
+	')
+
+	userdom_base_user_template($1)
+	myuserdom_manage_home_role($1_r, $1_t)
+	myuserdom_manage_tmp_role($1_r, $1_t)
+	userdom_manage_tmpfs_role($1_r, $1_t)
+	userdom_exec_user_tmp_files($1_t)
+	#userdom_exec_user_home_content_files($1_t)
+	userdom_change_password_template($1)
+
+	##############################
+	#
+	# User domain Local policy
+	#
+
+	allow $1_t self:capability { setgid chown fowner };
+	dontaudit $1_t self:capability { sys_nice fsetid };
+
+	allow $1_t self:process ~{ setcurrent setexec setrlimit execmem execstack execheap };
+	dontaudit $1_t self:process setrlimit;
+	dontaudit $1_t self:netlink_route_socket { create ioctl read getattr write setattr append bind connect getopt setopt shutdown nlmsg_read nlmsg_write };
+
+	allow $1_t self:context contains;
+
+	kernel_dontaudit_read_system_state($1_t)
+	#
+	dev_read_sysfs($1_t)
+	#
+	dev_read_urand($1_t)
+
+	domain_use_interactive_fds($1_t)
+	# Command completion can fire hundreds of denials
+	domain_dontaudit_exec_all_entry_files($1_t)
+
+	files_dontaudit_list_default($1_t)
+	files_dontaudit_read_default_files($1_t)
+	# Stat lost+found.
+	files_getattr_lost_found_dirs($1_t)
+
+	fs_get_all_fs_quotas($1_t)
+	fs_getattr_all_fs($1_t)
+	fs_getattr_all_dirs($1_t)
+	fs_search_auto_mountpoints($1_t)
+	fs_list_cgroup_dirs($1_t)
+	fs_list_inotifyfs($1_t)
+	fs_rw_anon_inodefs_files($1_t)
+	fs_dontaudit_rw_cgroup_files($1_t)
+
+	auth_dontaudit_write_login_records($1_t)
+
+	application_exec_all($1_t)
+
+	# The library functions always try to open read-write first,
+	# then fall back to read-only if it fails.
+	init_dontaudit_rw_utmp($1_t)
+	# Stop warnings about access to /dev/console
+	init_dontaudit_use_fds($1_t)
+	init_dontaudit_use_script_fds($1_t)
+
+	libs_exec_lib_files($1_t)
+
+	logging_dontaudit_getattr_all_logs($1_t)
+
+	miscfiles_read_man_pages($1_t)
+	# for running TeX programs
+	miscfiles_read_tetex_data($1_t)
+	miscfiles_exec_tetex_data($1_t)
+
+	seutil_read_config($1_t)
+
+	optional_policy(`
+		cups_read_config($1_t)
+		cups_stream_connect($1_t)
+		cups_stream_connect_ptal($1_t)
+	')
+
+	optional_policy(`
+		kerberos_use($1_t)
+	')
+
+	optional_policy(`
+		mta_dontaudit_read_spool_symlinks($1_t)
+	')
+
+	optional_policy(`
+		quota_dontaudit_getattr_db($1_t)
+	')
+
+	optional_policy(`
+		rpm_read_db($1_t)
+		rpm_dontaudit_manage_db($1_t)
+	')
+')
+
+interface(`myuserdom_manage_tmp_role',`
+	gen_require(`
+		type user_tmp_t;
+	')
+
+	files_poly_member_tmp($2, user_tmp_t)
+
+	manage_dirs_pattern($2, user_tmp_t, user_tmp_t)
+	mymanage_files_pattern($2, user_tmp_t, user_tmp_t)
+	manage_lnk_files_pattern($2, user_tmp_t, user_tmp_t)
+	manage_sock_files_pattern($2, user_tmp_t, user_tmp_t)
+	manage_fifo_files_pattern($2, user_tmp_t, user_tmp_t)
+	files_tmp_filetrans($2, user_tmp_t, { dir file lnk_file sock_file fifo_file })
+	userdom_user_runtime_filetrans_user_tmp($2, { dir file lnk_file sock_file fifo_file })
+')
+
+interface(`mymanage_files_pattern',`
+	allow $1 $2:dir rw_dir_perms;
+	allow $1 $3:file  { create open getattr  read write append rename link unlink ioctl lock } ;
+')
+
+interface(`mymymanage_files_pattern',`
+	allow $1 $2:dir rw_dir_perms;
+	allow $1 $3:file manage_file_perms;
+')
+
+interface(`myuserdom_manage_home_role',`
+	gen_require(`
+		type user_home_t, user_home_dir_t;
+	')
+
+	##############################
+	#
+	# Domain access to home dir
+	#
+
+	type_member $2 user_home_dir_t:dir user_home_dir_t;
+
+	# full control of the home directory
+	allow $2 user_home_t:file entrypoint;
+	manage_dirs_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	manage_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	manage_lnk_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	manage_sock_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	manage_fifo_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	relabel_dirs_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	relabel_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	relabel_lnk_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	relabel_sock_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	relabel_fifo_files_pattern($2, { user_home_dir_t user_home_t }, user_home_t)
+	filetrans_pattern($2, user_home_dir_t, user_home_t, { dir file lnk_file sock_file fifo_file })
+	files_list_home($2)
+
+	# cjp: this should probably be removed:
+	allow $2 user_home_dir_t:dir { manage_dir_perms relabel_dir_perms };
+
+	userdom_manage_user_certs($2)
+	userdom_user_home_dir_filetrans($2, user_cert_t, dir, ".pki")
+
+	tunable_policy(`use_nfs_home_dirs',`
+		fs_manage_nfs_dirs($2)
+		fs_manage_nfs_files($2)
+		fs_manage_nfs_symlinks($2)
+		fs_manage_nfs_named_sockets($2)
+		fs_manage_nfs_named_pipes($2)
+	',`
+		fs_dontaudit_manage_nfs_dirs($2)
+		fs_dontaudit_manage_nfs_files($2)
+	')
+
+	tunable_policy(`use_samba_home_dirs',`
+		fs_manage_cifs_dirs($2)
+		fs_manage_cifs_files($2)
+		fs_manage_cifs_symlinks($2)
+		fs_manage_cifs_named_sockets($2)
+		fs_manage_cifs_named_pipes($2)
+	',`
+		fs_dontaudit_manage_cifs_dirs($2)
+		fs_dontaudit_manage_cifs_files($2)
+	')
+')

@@ -1,0 +1,6 @@
+
+/opt/libreoffice6.1(/.*)?		gen_context(system_u:object_r:libreoffice_rw_t,s0)
+
+/opt/libreoffice6.1/program/soffice		--	gen_context(system_u:object_r:libreoffice_exec_t,s0)
+
+/var/lib/libreoffice(/.*)?		gen_context(system_u:object_r:libreoffice_var_lib_t,s0)
