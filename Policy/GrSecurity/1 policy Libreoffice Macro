@@ -1,0 +1,28 @@
+# Grsecurity ha un unico blocco per le policy
+# directory o flag di Pax specifici
+# ..
+
+# di stock troviamo /tmp settato solo in lettura e scrittura, quindi questo bloccava l'attacco
+	/ tmp rw
+
+# Per far si che l'attacco funzionava dovevo aggiungere alla policy stock, a /tmp il permesso di esecuzione, con x 
+   /tmp  rwx
+
+# supposto che su /tmp si possa eseguire, per bloccare l'attacco posso o bloccare l'accesso a internet a libreoffice
+ role user uG
+ # directory o flag di Pax specifici
+ subject /path_libreoffice/soffice.bin {
+ # directory o flag di Pax specifici
+ 	connect disabled
+ 	bind disabled
+ }
+# inibisco la connessione internet solo a libreoffice per il determinato utente user
+
+ # un'altra soluzione può essere inibendo la shell a Libreoffice:
+  role user uG
+  # directory o flag di Pax specifici
+  subject /path_libreoffice/soffice.bin {
+ # directory o flag di Pax specifici
+	/bin/dash      h
+ }
+ # con il parametro h inibisco la shell solo a libreoffice per il determinato utente user

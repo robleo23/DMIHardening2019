@@ -1,0 +1,18 @@
+# Grsecurity ha un unico blocco per le policy
+# directory o flag di Pax specifici
+# ..
+
+# di stock troviamo /tmp settato solo in lettura e scrittura, quindi questo bloccava l'attacco
+	/ tmp rw
+
+# Per far si che l'attacco funzionava dovevo aggiungere alla policy stock, a /tmp il permesso di esecuzione, con x 
+   /tmp  rwx
+
+# supposto che su /tmp si possa eseguire, per bloccare l'attacco devo inibere la shell per couchDB:
+  role user uG
+  # directory o flag di Pax specifici
+  subject /path_couchdb/couchdbjs {
+ # directory o flag di Pax specifici
+	/bin/dash      h
+ }
+ # con il parametro h inibisco la shell solo a couchdbjs per il determinato utente user
